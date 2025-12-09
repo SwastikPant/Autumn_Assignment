@@ -9,7 +9,6 @@ PRIV_CHOICES = [
 # Create your models here.
 class Image(models.Model):
 	event = models.ForeignKey("events.Event", on_delete=models.CASCADE)
-	album = models.ForeignKey("events.Album", on_delete=models.CASCADE, null=True, blank=True)
 	batch = models.IntegerField(null=True, blank=True)
 	original_image = models.ImageField(upload_to="photos/original/", null=False, blank=False)
 	watermarked_image = models.ImageField(upload_to="photos/watermarked/", null=True, blank=True)
