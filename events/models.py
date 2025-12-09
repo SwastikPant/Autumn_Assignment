@@ -11,3 +11,14 @@ class Event(models.Model):
 	created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 	is_public = models.BooleanField(default=True)
 	created_at = models.DateTimeField(auto_now_add=True)
+
+class Album(models.Model):
+	event = models.ForeignKey(Event, on_delete=models.CASCADE)
+	name = models.CharField(max_length=100)
+	start_date = models.DateTimeField()
+	end_date = models.DateTimeField()
+	description = models.TextField(null=True, blank=True)
+	cover_photo = models.ImageField(upload_to="event_covers/", blank=True, null=True)
+	created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+	is_public = models.BooleanField(default=True)
+	created_at = models.DateTimeField(auto_now_add=True)	
