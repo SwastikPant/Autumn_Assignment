@@ -24,7 +24,7 @@ class Album(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True)	
 
 class AlbumImage(models.Model):
-    album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name="album_images")
+    album = models.ForeignKey(Album, on_delete=models.CASCADE)
     image = models.ForeignKey("images.Image", on_delete=models.CASCADE, related_name="+")
     order = models.PositiveIntegerField(default=0)
     added_at = models.DateTimeField(auto_now_add=True)
