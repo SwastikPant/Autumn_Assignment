@@ -5,3 +5,4 @@ class EventSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Event
 		fields = "__all__"
+		read_only_fields = ["created_at", "created_by"]

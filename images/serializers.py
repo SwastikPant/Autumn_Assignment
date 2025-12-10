@@ -5,3 +5,11 @@ class ImageSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Image
 		fields = "__all__"
+		read_only_fields = [
+        	"view_count",
+            "like_count",
+            "download_count",
+            "uploaded_at",
+            "uploaded_by",
+            "exif",
+        ]
