@@ -1,13 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-PRIV_CHOICES = [
-    ("PUBLIC", "Public"),
-    ("PRIVATE", "Private"),
-]
 
 # Create your models here.
 class Image(models.Model):
+
+	PRIV_CHOICES = [
+    ("PUBLIC", "Public"),
+    ("PRIVATE", "Private"),
+	]
+
 	event = models.ForeignKey("events.Event", on_delete=models.CASCADE)
 	batch = models.IntegerField(null=True, blank=True)
 	original_image = models.ImageField(upload_to="images/original/", null=False, blank=False)
