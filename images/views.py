@@ -4,7 +4,7 @@ from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import ImageSerializer, ImageUploadSerializer
@@ -17,13 +17,13 @@ from activities.models import Reaction
 class ImageViewSet(viewsets.ModelViewSet):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
-    parser_classes = (MultiPartParser, FormParser) 
-
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ImageFilter
     search_fields = ['uploaded_by__username', 'event__name']
     ordering_fields = ['uploaded_at', 'like_count', 'view_count'] 
     ordering = ['uploaded_at']
+
 
     def get_permissions(self):
         if self.action in ['create', 'bulk_upload']:
