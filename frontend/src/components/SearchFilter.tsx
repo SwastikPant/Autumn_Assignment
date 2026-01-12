@@ -26,6 +26,7 @@ export interface SearchFilters {
   ordering?: string;
   uploaded_after?: string;
   uploaded_before?: string;
+  tags?: string; 
 }
 
 const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, showEventFilter = true }) => {
@@ -37,6 +38,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, showEventFilter =
     ordering: '-uploaded_at',
     uploaded_after: '',
     uploaded_before: '',
+    tags: '',
   });
 
   const handleChange = (field: keyof SearchFilters, value: string) => {
@@ -61,6 +63,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, showEventFilter =
       ordering: '-uploaded_at',
       uploaded_after: '',
       uploaded_before: '',
+      tags: '',
     };
     setFilters(clearedFilters);
     onSearch({ ordering: '-uploaded_at' });
@@ -168,6 +171,17 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, showEventFilter =
             />
           </Grid>
 
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <TextField
+              fullWidth
+              label="Tags"
+              value={filters.tags}
+              onChange={(e) => handleChange('tags', e.target.value)}
+              size="small"
+              placeholder="sunset,beach"
+              helperText="Comma-separated"
+            />
+          </Grid>
           {/* Action Buttons */}
           <Grid size={{ xs: 12 }}>
             <Box display="flex" gap={2} justifyContent="flex-end">

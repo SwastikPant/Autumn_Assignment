@@ -1,11 +1,13 @@
 from rest_framework import serializers
 from .models import Image
+from tags.serializers import TagSerializer
 
 
 class ImageSerializer(serializers.ModelSerializer):
     user_liked = serializers.SerializerMethodField()
     user_favourited = serializers.SerializerMethodField()
     uploaded_by = serializers.StringRelatedField(read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
 
     class Meta:
         model = Image
