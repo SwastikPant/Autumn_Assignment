@@ -12,6 +12,8 @@ from .models import Image
 from .permissions import CanUploadImage, CanModifyImage
 from .filters import ImageFilter
 from activities.models import Reaction
+from tags.models import Tag, ImageTag
+from tags.serializers import TagSerializer
 
 
 class ImageViewSet(viewsets.ModelViewSet):

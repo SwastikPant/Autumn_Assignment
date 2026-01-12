@@ -35,6 +35,13 @@ export interface Event {
   images?: Image[];
 }
 
+export interface Tag {
+  id: number;
+  name: string;
+  created_at: string;
+  image_count?: number;
+}
+
 export interface Image {
   id: number;
   event: number;
@@ -54,6 +61,7 @@ export interface Image {
   user_favorited: boolean;
   privacy: 'PUBLIC' | 'PRIVATE';
   uploaded_at: string;
+  tags: Tag[];
 }
 
 export interface Comment {

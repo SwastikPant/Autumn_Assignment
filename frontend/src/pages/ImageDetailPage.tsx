@@ -23,11 +23,13 @@ import {
   Visibility,
   CameraAlt,
   Delete,
+  LocalOffer,
 } from '@mui/icons-material';
 import { imagesService } from '../services/images';
 import { Image } from '../types';
 import CommentsSection from '../components/CommentsSection'
 import { useAppSelector } from '../store/hooks';
+import TagsManager from '../components/TagsManager';
 
 const ImageDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +41,8 @@ const ImageDetailPage: React.FC = () => {
 
   const { user } = useAppSelector((state) => state.auth);
   const [deleting, setDeleting] = useState(false);
+
+  const [reloadTrigger, setReloadTrigger] = useState(0);
 
   const isOwner = image && (
     image.uploaded_by === user?.username || 
@@ -68,7 +72,7 @@ const ImageDetailPage: React.FC = () => {
     if (id) {
       loadImage(parseInt(id));
     }
-  }, [id]);
+  }, [id, reloadTrigger]);
 
   const loadImage = async (imageId: number) => {
     try {
@@ -139,6 +143,9 @@ const ImageDetailPage: React.FC = () => {
       console.error('Download failed:', err);
       window.open(image.original_image, '_blank');
     }
+  };
+  const handleTagsChange = () => {
+    setReloadTrigger((prev) => prev + 1); // Trigger reload
   };
 
   if (error || !image) {
@@ -265,71 +272,18 @@ const ImageDetailPage: React.FC = () => {
               </Typography>
             </Box>
 
-            {(image.camera_model || image.capture_time) && (
-              <>
-                <Divider sx={{ my: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  <CameraAlt fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
-                  Camera Info
-                </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              <LocalOffer fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
+              Tags
+            </Typography>
 
-                {image.camera_model && (
-                  <Box mb={1}>
-                    <Typography variant="caption" color="text.secondary">
-                      Camera
-                    </Typography>
-                    <Typography variant="body2">
-                      {image.camera_model}
-                    </Typography>
-                  </Box>
-                )}
-
-                {image.capture_time && (
-                  <Box mb={1}>
-                    <Typography variant="caption" color="text.secondary">
-                      Taken on
-                    </Typography>
-                    <Typography variant="body2">
-                      {new Date(image.capture_time).toLocaleString()}
-                    </Typography>
-                  </Box>
-                )}
-
-                {image.aperture && (
-                  <Box mb={1}>
-                    <Typography variant="caption" color="text.secondary">
-                      Aperture
-                    </Typography>
-                    <Typography variant="body2">
-                      f/{image.aperture}
-                    </Typography>
-                  </Box>
-                )}
-
-                {image.shutter_speed && (
-                  <Box mb={1}>
-                    <Typography variant="caption" color="text.secondary">
-                      Shutter Speed
-                    </Typography>
-                    <Typography variant="body2">
-                      {image.shutter_speed}
-                    </Typography>
-                  </Box>
-                )}
-
-                {image.iso && (
-                  <Box mb={1}>
-                    <Typography variant="caption" color="text.secondary">
-                      ISO
-                    </Typography>
-                    <Typography variant="body2">
-                      {image.iso}
-                    </Typography>
-                  </Box>
-                )}
-              </>
-            )}
-
+            <TagsManager
+              imageId={image.id}
+              tags={image.tags || []}
+              canEdit={!!isOwner}
+              onTagsChange={handleTagsChange}
+            />
 
             <Divider sx={{ my: 2 }} />
             <Chip
