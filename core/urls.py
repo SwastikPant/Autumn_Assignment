@@ -24,6 +24,7 @@ from rest_framework_simplejwt.views import (
 from events.views import EventViewSet
 from images.views import ImageViewSet
 from activities.views import CommentViewSet
+from activities.views import NotificationViewSet
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -31,6 +32,7 @@ router = DefaultRouter();
 router.register(r'events', EventViewSet)
 router.register(r'images', ImageViewSet)
 router.register(r'comments', CommentViewSet)
+router.register(r'notifications', NotificationViewSet, basename='notification')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

@@ -87,6 +87,12 @@ class ImageViewSet(viewsets.ModelViewSet):
             image.like_count = F('like_count') + 1
             image.save(update_fields=['like_count'])
             image.refresh_from_db()
+            try:
+                from activities.notifications import notify_user
+                if image.uploaded_by and image.uploaded_by != request.user:
+                    notify_user(image.uploaded_by, request.user, f"liked your photo", image=image)
+            except Exception:
+                pass
             return Response({
                 'liked': True,
                 'like_count': image.like_count
@@ -155,11 +161,24 @@ class ImageViewSet(viewsets.ModelViewSet):
         elif request.method == 'POST':
             from activities.models import Comment
             from activities.serializers import CommentSerializer
-            
+
             serializer = CommentSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save(user=request.user, image=image)
+
+                # Notify the image owner about the new comment
+                try:
+                    from activities.notifications import notify_user
+                    if image.uploaded_by and image.uploaded_by != request.user:
+                        # serializer.data doesn't include created comment instance, get last comment
+                        from activities.models import Comment as CommentModel
+                        latest_comment = CommentModel.objects.filter(image=image).order_by('-created_at').first()
+                        notify_user(image.uploaded_by, request.user, f"commented on your photo", image=image, comment=latest_comment)
+                except Exception:
+                    pass
+
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
@@ -263,6 +282,13 @@ class ImageViewSet(viewsets.ModelViewSet):
             )
         
         serializer = self.get_serializer(image)
+        # Notify uploader that a tag was added
+        try:
+            from activities.notifications import notify_user
+            if image.uploaded_by and image.uploaded_by != request.user:
+                notify_user(image.uploaded_by, request.user, f"tagged the photo with '{tag.name}'", image=image)
+        except Exception:
+            pass
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
@@ -333,6 +359,14 @@ class ImageViewSet(viewsets.ModelViewSet):
             return Response({'message': 'User already tagged on this image'}, status=status.HTTP_200_OK)
 
         serializer = self.get_serializer(image)
+        # Notify the tagged user
+        try:
+            from activities.notifications import notify_user
+            if target_user != request.user:
+                notify_user(target_user, request.user, f"tagged you in a photo", image=image)
+        except Exception:
+            pass
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
