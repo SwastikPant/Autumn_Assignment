@@ -21,6 +21,8 @@ import BrowseImagesPage from './pages/BrowseImagesPage';
 import CreateEventPage from './pages/CreateEventPage';
 import EditEventPage from './pages/EditEventPage';
 import ProfileSettingsPage from './pages/ProfileSettingsPage';
+import OmniportCallbackPage from './pages/OmniportCallbackPage';
+import MyTaggedPage from './pages/MyTaggedPage';
 
 const theme = createTheme({
   palette: {
@@ -51,6 +53,7 @@ const App: React.FC = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/verify-otp" element={<VerifyOTPPage />} />
+          <Route path="/auth/callback" element={<OmniportCallbackPage />} />
 
           {/* Routes WITH navbar (protected pages) */}
           <Route element={<Layout />}>
@@ -77,6 +80,10 @@ const App: React.FC = () => {
             <Route
               path="/favorites"
               element={isAuthenticated ? <MyFavoritesPage /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/tagged"
+              element={isAuthenticated ? <MyTaggedPage /> : <Navigate to="/login" />}
             />
             <Route
               path="/my-uploads"

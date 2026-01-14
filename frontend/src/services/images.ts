@@ -22,6 +22,11 @@ export const imagesService = {
     return Array.isArray(response.data) ? response.data : response.data.results;
   },
 
+  getMyTagged: async (): Promise<any> => {
+    const response = await api.get('/images/my_tagged/');
+    return Array.isArray(response.data) ? response.data : response.data.results;
+  },
+
   upload: async (formData: FormData) => {
     const response = await api.post('/images/bulk_upload/', formData, {
       headers: {

@@ -14,7 +14,7 @@ class Tag(models.Model):
 class ImageTag(models.Model):
     image = models.ForeignKey('images.Image', on_delete=models.CASCADE, related_name='image_tags')
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE, related_name='image_tags')
-    added_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    added_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     added_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -28,7 +28,7 @@ class ImageTag(models.Model):
 class ImageUserTag(models.Model):
     image = models.ForeignKey('images.Image', on_delete=models.CASCADE, related_name='image_user_tags')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tagged_in_images')
-    added_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='added_user_tags')
+    added_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

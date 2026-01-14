@@ -15,6 +15,16 @@ export interface LoginResponse {
   refresh: string;
 }
 
+export interface OmniportLoginResponse {
+  access: string;
+  refresh: string;
+  user: {
+    username: string;
+    email: string;
+    is_new: boolean;
+  };
+}
+
 export interface RegisterRequest {
   username: string;
   email: string;

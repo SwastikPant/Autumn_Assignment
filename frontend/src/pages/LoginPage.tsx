@@ -9,9 +9,11 @@ import {
   Alert,
   Paper,
   Link,
+  Divider,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { login } from '../store/authSlice';
+import { authService } from '../services/auth';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +22,8 @@ const LoginPage: React.FC = () => {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [omniLoading, setOmniLoading] = useState(false);
+  const [omniError, setOmniError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -31,6 +35,20 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     
     await dispatch(login({ username, password }));
+  };
+
+  const handleOmniportLogin = async () => {
+    try {
+      setOmniError(null);
+      setOmniLoading(true);
+      const url = await authService.getOmniportAuthorizationUrl();
+      window.location.href = url;
+    } catch (err: any) {
+      console.error(err);
+      setOmniError('Failed to start Omniport login. Please try again.');
+    } finally {
+      setOmniLoading(false);
+    }
   };
 
   return (
@@ -54,6 +72,12 @@ const LoginPage: React.FC = () => {
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {error}
+            </Alert>
+          )}
+
+          {omniError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {omniError}
             </Alert>
           )}
 
@@ -90,6 +114,19 @@ const LoginPage: React.FC = () => {
               disabled={loading}
             >
               {loading ? 'Logging in...' : 'Login'}
+            </Button>
+
+            <Divider sx={{ my: 2 }}>OR</Divider>
+
+            <Button
+              type="button"
+              fullWidth
+              variant="outlined"
+              sx={{ mb: 2 }}
+              onClick={handleOmniportLogin}
+              disabled={omniLoading}
+            >
+              {omniLoading ? 'Redirecting to Omniport...' : 'Login with Omniport'}
             </Button>
 
             <Box sx={{ textAlign: 'center' }}>

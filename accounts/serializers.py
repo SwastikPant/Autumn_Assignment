@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Profile
 import random
+from django.conf import settings
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -10,27 +11,63 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email', 'password', 'password2']
+ 
+        extra_kwargs = {
+            'username': {'validators': []},
+        }
     
     def validate(self, data):
         if data['password'] != data['password2']:
             raise serializers.ValidationError('Passwords do not match')
+
+        email = data.get('email')
+        username = data.get('username')
+
+        existing_user = None
+
+        try:
+            user_by_email = User.objects.get(email=email)
+            if user_by_email.profile.email_verified:
+                raise serializers.ValidationError('Email already registered')
+            existing_user = user_by_email
+        except User.DoesNotExist:
+            pass
+
+        
+        if existing_user is None:
+            try:
+                user_by_username = User.objects.get(username=username)
+                if user_by_username.profile.email_verified:
+                    raise serializers.ValidationError('Username already taken')
+                existing_user = user_by_username
+            except User.DoesNotExist:
+                pass
+
+       
+        self.existing_user = existing_user
         return data
-    
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError('Email already registered')
-        return value
     
     def create(self, validated_data):
         validated_data.pop('password2')
         password = validated_data.pop('password')
-        
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=password,
-            is_active=False 
-        )
+
+        existing_user = getattr(self, 'existing_user', None)
+
+        if existing_user:
+           
+            user = existing_user
+            user.username = validated_data['username']
+            user.email = validated_data['email']
+            user.set_password(password)
+            user.is_active = False
+            user.save()
+        else:
+            user = User.objects.create_user(
+                username=validated_data['username'],
+                email=validated_data['email'],
+                password=password,
+                is_active=False 
+            )
         
         otp = str(random.randint(100000, 999999))
         
@@ -43,7 +80,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         send_mail(
             'Verify your email - Event Photo Platform',
             f'Your OTP is: {otp}\n\nThis OTP will expire in 10 minutes.',
-            'noreply@eventphoto.com',
+            settings.DEFAULT_FROM_EMAIL,
             [user.email],
             fail_silently=False,
         )
