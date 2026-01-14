@@ -3,6 +3,10 @@ from PIL import Image as PILImage
 from io import BytesIO
 from django.core.files.base import ContentFile
 import os
+from celery import shared_task
+from .models import Image
+from tags.models import Tag, ImageTag
+from images.ml.resnet import predict_tags
 
 @shared_task
 def generate_thumbnail(image_id):
@@ -114,3 +118,18 @@ def apply_watermark(image_id, watermark_text="Event Photo Platform"):
     
     except Exception as e:
         return f"Error: {str(e)}"
+
+@shared_task
+def auto_tag_image(image_id):
+    print("AUTO TAG TASK STARTED", image_id)
+
+    image = Image.objects.get(id=image_id)
+    image_path = image.original_image.path
+
+    tags = predict_tags(image_path)
+
+    for tag_name in tags:
+        tag, _ = Tag.objects.get_or_create(name=tag_name)
+        ImageTag.objects.get_or_create(image=image, tag=tag, defaults={"added_by": None})
+
+    return tags

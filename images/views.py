@@ -15,6 +15,7 @@ from activities.models import Reaction
 from tags.models import Tag, ImageTag, ImageUserTag
 from tags.serializers import TagSerializer
 from django.contrib.auth.models import User
+from images.tasks import auto_tag_image
 
 
 class ImageViewSet(viewsets.ModelViewSet):
@@ -51,11 +52,13 @@ class ImageViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
 
+
     def retrieve(self, request, *args, **kwargs):
         from django.db.models import F
         instance = self.get_object()
-        Image.objects.filter(pk=instance.pk).update(view_count=F('view_count') + 1)
-        instance.refresh_from_db()
+        if request.query_params.get("count_view") == "1":
+            Image.objects.filter(pk=instance.pk).update(view_count=F('view_count') + 1)
+            instance.refresh_from_db()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
@@ -137,6 +140,15 @@ class ImageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def my_tagged(self, request):
+
+        tagged_images = self.queryset.filter(
+            image_user_tags__user=request.user
+        ).distinct()
+        serializer = self.get_serializer(tagged_images, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my_uploads(self, request):
         my_images = self.queryset.filter(uploaded_by=request.user)
         serializer = self.get_serializer(my_images, many=True)
@@ -210,6 +222,7 @@ class ImageViewSet(viewsets.ModelViewSet):
 
                 if serializer.is_valid():
                     image_obj = serializer.save()
+                    auto_tag_image.delay(image_obj.id)
                     uploaded_images.append({
                         'id': image_obj.id,
                         'filename': image_file.name,

@@ -7,7 +7,7 @@ import {
   Button,
   Box,
 } from '@mui/material';
-import { Logout, Home, Favorite, CloudUpload, PhotoLibrary, Person } from '@mui/icons-material';
+import { Logout, Home, Favorite, CloudUpload, PhotoLibrary, Person, Label } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logout } from '../store/authSlice';
 import NotificationBell from './NotificationBell';
@@ -33,7 +33,7 @@ const Navbar: React.FC = () => {
           sx={{ flexGrow: 1, cursor: 'pointer' }}
           onClick={() => navigate('/events')}
         >
-          📸 Event Photo Platform
+           Event Photo Platform
         </Typography>
 
         <Box display="flex" alignItems="center" gap={2}>
@@ -54,6 +54,13 @@ const Navbar: React.FC = () => {
             onClick={() => navigate('/favorites')}
           >
             Favorites
+          </Button>
+          <Button
+            color="inherit"
+            startIcon={<Label />}
+            onClick={() => navigate('/tagged')}
+          >
+            Tagged
           </Button>
           {canUpload && (
             <Button

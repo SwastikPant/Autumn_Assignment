@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from .serializers import RegisterSerializer, VerifyOTPSerializer, OmniportOAuthSerializer
 from django.contrib.auth.models import User
 from rest_framework.pagination import PageNumberPagination
+from django.conf import settings
 
 
 @api_view(['GET'])
@@ -61,6 +62,24 @@ def verify_otp(request):
             'message': 'Email verified successfully. You can now login.'
         }, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def omniport_authorize(request):
+    """
+    Returns the Omniport authorization URL that the frontend should redirect the user to.
+    """
+    import urllib.parse
+
+    params = {
+        "client_id": settings.OMNIPORT_OAUTH_CLIENT_ID,
+        "redirect_uri": settings.OMNIPORT_OAUTH_REDIRECT_URI,
+        "response_type": "code",
+    }
+    query = urllib.parse.urlencode(params)
+    url = f"{settings.OMNIPORT_OAUTH_AUTHORIZATION_URL}?{query}"
+    return Response({"authorization_url": url})
 
 
 @api_view(['POST'])

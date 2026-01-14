@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -148,15 +149,48 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION' : True,
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() in ("1", "true", "yes", "on")
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "false").lower() in ("1", "true", "yes", "on")
+
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL",
+    EMAIL_HOST_USER or "EMAIL_HOST_USER",
+)
+
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "10"))
+
+EMAIL_BACKEND = (
+    "django.core.mail.backends.smtp.EmailBackend"
+    if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
+    else "django.core.mail.backends.console.EmailBackend"
+)
 
 # Omniport OAuth Configuration
-OMNIPORT_OAUTH_CLIENT_ID = 'your_client_id' 
-OMNIPORT_OAUTH_CLIENT_SECRET = 'your_client_secret'  
-OMNIPORT_OAUTH_AUTHORIZATION_URL = 'https://channeli.in/oauth/authorise/'
-OMNIPORT_OAUTH_TOKEN_URL = 'https://channeli.in/oauth/token/'
-OMNIPORT_OAUTH_USER_INFO_URL = 'https://channeli.in/kernel/user/get_user_information/'
-OMNIPORT_OAUTH_REDIRECT_URI = 'http://localhost:3000/auth/callback'  
+# These should be provided via environment variables in real deployments.
+OMNIPORT_OAUTH_CLIENT_ID = os.getenv("OMNIPORT_OAUTH_CLIENT_ID", "your_client_id")
+OMNIPORT_OAUTH_CLIENT_SECRET = os.getenv("OMNIPORT_OAUTH_CLIENT_SECRET", "your_client_secret")
+OMNIPORT_OAUTH_AUTHORIZATION_URL = os.getenv(
+    "OMNIPORT_OAUTH_AUTHORIZATION_URL",
+    "https://channeli.in/oauth/authorise/",
+)
+OMNIPORT_OAUTH_TOKEN_URL = os.getenv(
+    "OMNIPORT_OAUTH_TOKEN_URL",
+    "https://channeli.in/oauth/token/",
+)
+OMNIPORT_OAUTH_USER_INFO_URL = os.getenv(
+    "OMNIPORT_OAUTH_USER_INFO_URL",
+    "https://channeli.in/kernel/user/get_user_information/",
+)
+OMNIPORT_OAUTH_REDIRECT_URI = os.getenv(
+    "OMNIPORT_OAUTH_REDIRECT_URI",
+    "http://localhost:3000/auth/callback",
+)
 
 
 # Celery Configuration

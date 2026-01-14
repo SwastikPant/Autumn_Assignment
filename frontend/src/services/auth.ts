@@ -1,5 +1,5 @@
 import api from './api';
-import { LoginRequest, LoginResponse, RegisterRequest, User } from '../types';
+import { LoginRequest, LoginResponse, RegisterRequest, User, OmniportLoginResponse } from '../types';
 
 export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
@@ -19,6 +19,16 @@ export const authService = {
 
   getCurrentUser: async (): Promise<User> => {
     const response = await api.get<User>('/auth/me/');
+    return response.data;
+  },
+
+  getOmniportAuthorizationUrl: async (): Promise<string> => {
+    const response = await api.get<{ authorization_url: string }>('/auth/omniport-authorize/');
+    return response.data.authorization_url;
+  },
+
+  loginWithOmniportCode: async (code: string): Promise<OmniportLoginResponse> => {
+    const response = await api.post<OmniportLoginResponse>('/auth/omniport-login/', { code });
     return response.data;
   },
 

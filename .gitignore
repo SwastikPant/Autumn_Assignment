@@ -6,5 +6,7 @@ media/
 env/
 venv/
 
+runserver.ps1
+
 *.sublime-workspace
 *.sublime-project
