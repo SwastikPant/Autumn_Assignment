@@ -34,3 +34,21 @@ class Comment(models.Model):
     
     def __str__(self):
         return f"{self.user.username} on {self.image.id}"
+
+
+class Notification(models.Model):
+    # The recipient of the notification
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    # Who triggered the notification (actor)
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='actions')
+    verb = models.CharField(max_length=200)
+    image = models.ForeignKey(Image, on_delete=models.CASCADE, null=True, blank=True)
+    comment = models.ForeignKey('Comment', on_delete=models.CASCADE, null=True, blank=True)
+    unread = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification to {self.user.username}: {self.verb}"

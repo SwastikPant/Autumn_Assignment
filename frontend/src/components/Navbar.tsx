@@ -10,6 +10,7 @@ import {
 import { Logout, Home, Favorite, CloudUpload, PhotoLibrary, Person } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logout } from '../store/authSlice';
+import NotificationBell from './NotificationBell';
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ const Navbar: React.FC = () => {
         </Typography>
 
         <Box display="flex" alignItems="center" gap={2}>
+          <NotificationBell />
           <Typography variant="body1" color="inherit">
             {user?.username || 'User'} ({user?.role || 'Guest'})
           </Typography>

@@ -1,5 +1,14 @@
 from rest_framework import serializers
 from .models import Reaction, Comment
+from .models import Notification
+
+class NotificationSerializer(serializers.ModelSerializer):
+    actor = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = ['id', 'user', 'actor', 'verb', 'image', 'comment', 'unread', 'created_at']
+        read_only_fields = ['user', 'actor', 'created_at']
 
 class ReactionSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
