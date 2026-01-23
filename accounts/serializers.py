@@ -122,32 +122,87 @@ class OmniportOAuthSerializer(serializers.Serializer):
     def validate(self, data):
         import requests
         from django.conf import settings
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        code = data['code']
         
         token_data = {
             'client_id': settings.OMNIPORT_OAUTH_CLIENT_ID,
             'client_secret': settings.OMNIPORT_OAUTH_CLIENT_SECRET,
             'grant_type': 'authorization_code',
-            'code': data['code'],
+            'code': code,
             'redirect_uri': settings.OMNIPORT_OAUTH_REDIRECT_URI,
         }
         
         try:
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
+            }
+            
             token_response = requests.post(
                 settings.OMNIPORT_OAUTH_TOKEN_URL,
-                data=token_data
+                data=token_data,
+                headers=headers,
+                timeout=10,
+                verify=True
             )
+            
+            logger.info(f"Token response status: {token_response.status_code}")
+            
+            if token_response.status_code == 405:
+                logger.warning("Got 405 - trying alternative paths...")
+                
+                alternatives = [
+                    settings.OMNIPORT_OAUTH_TOKEN_URL.rstrip('/'),
+                    settings.OMNIPORT_OAUTH_TOKEN_URL.replace('/open_auth/', '/api/o/'),
+                    settings.OMNIPORT_OAUTH_TOKEN_URL.replace('/open_auth/', '/oauth/'),
+                    settings.OMNIPORT_OAUTH_TOKEN_URL.replace('/open_auth/', '/api/auth/'),
+                ]
+                
+                for alt_url in alternatives:
+                    if alt_url != settings.OMNIPORT_OAUTH_TOKEN_URL and token_response.status_code == 405:
+                        try:
+                            logger.info(f"Trying alternative: {alt_url}")
+                            token_response = requests.post(
+                                alt_url,
+                                data=token_data,
+                                headers=headers,
+                                timeout=10,
+                                verify=True
+                            )
+                            logger.info(f"Alternative attempt - Status: {token_response.status_code}")
+                            if token_response.status_code != 405:
+                                logger.info(f"Success with alternative URL: {alt_url}")
+                                break
+                        except Exception as e:
+                            logger.error(f"Alternative attempt failed: {str(e)}")
+                            continue
+            
             token_response.raise_for_status()
             token_json = token_response.json()
+            logger.info(f"Successfully exchanged code for tokens")
+            
             access_token = token_json.get('access_token')
-            
             if not access_token:
-                raise serializers.ValidationError("Failed to get access token")
+                logger.error(f"No access_token in response: {token_json}")
+                raise serializers.ValidationError(f"Failed to get access token from Omniport")
             
-            headers = {'Authorization': f'Bearer {access_token}'}
+
+            user_headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Accept': 'application/json'
+            }
+            
             user_response = requests.get(
                 settings.OMNIPORT_OAUTH_USER_INFO_URL,
-                headers=headers
+                headers=user_headers,
+                timeout=10,
+                verify=True
             )
+            
             user_response.raise_for_status()
             user_info = user_response.json()
             
@@ -155,4 +210,9 @@ class OmniportOAuthSerializer(serializers.Serializer):
             return data
             
         except requests.exceptions.RequestException as e:
+            logger.error(f"OAuth request failed: {str(e)}")
+            logger.error(f"Error type: {type(e).__name__}")
+            if hasattr(e, 'response') and e.response is not None:
+                logger.error(f"Response status: {e.response.status_code}")
+                logger.error(f"Response text: {e.response.text[:500]}")
             raise serializers.ValidationError(f"OAuth failed: {str(e)}")

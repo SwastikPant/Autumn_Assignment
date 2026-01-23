@@ -7,6 +7,7 @@ from datetime import timedelta
 class Profile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE)
 	profile_picture = models.ImageField(upload_to="profile_pics/", blank=True, null=True)
+	display_picture = models.URLField(blank=True, null=True)  # Omniport display picture URL
 	bio = models.TextField(blank=True, null=True)
 	batch = models.IntegerField(blank=True, null=True)
 	department = models.CharField(max_length=50, blank=True, null=True)

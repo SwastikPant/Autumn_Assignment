@@ -9,6 +9,7 @@ import {
   Alert,
   Paper,
   Link,
+  Divider,
 } from '@mui/material';
 import { authService } from '../services/auth';
 
@@ -24,6 +25,8 @@ const RegisterPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [omniLoading, setOmniLoading] = useState(false);
+  const [omniError, setOmniError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -56,6 +59,20 @@ const RegisterPage: React.FC = () => {
     }
   };
 
+  const handleOmniportRegister = async () => {
+    try {
+      setOmniError(null);
+      setOmniLoading(true);
+      const url = await authService.getOmniportAuthorizationUrl();
+      window.location.href = url;
+    } catch (err: any) {
+      console.error(err);
+      setOmniError('Failed to start Omniport registration. Please try again.');
+    } finally {
+      setOmniLoading(false);
+    }
+  };
+
   return (
     <Container maxWidth="sm">
       <Box sx={{ marginTop: 8 }}>
@@ -82,6 +99,12 @@ const RegisterPage: React.FC = () => {
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {error}
+            </Alert>
+          )}
+
+          {omniError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {omniError}
             </Alert>
           )}
 
@@ -146,6 +169,19 @@ const RegisterPage: React.FC = () => {
               disabled={loading}
             >
               {loading ? 'Registering...' : 'Register'}
+            </Button>
+
+            <Divider sx={{ my: 2 }}>OR</Divider>
+
+            <Button
+              type="button"
+              fullWidth
+              variant="outlined"
+              sx={{ mb: 2 }}
+              onClick={handleOmniportRegister}
+              disabled={omniLoading}
+            >
+              {omniLoading ? 'Redirecting to Omniport...' : 'Register with Omniport'}
             </Button>
 
             <Box sx={{ textAlign: 'center' }}>

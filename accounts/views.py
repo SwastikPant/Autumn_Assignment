@@ -91,29 +91,64 @@ def omniport_login(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     user_info = serializer.validated_data['user_info']
-    username = user_info.get('username')
-    email = user_info.get('contact_information', {}).get('institute_webmail_address')
-    full_name = user_info.get('person', {}).get('full_name', '')
     
-    if not username or not email:
+    email = user_info.get('contactInformation', {}).get('instituteWebmailAddress')
+    full_name = user_info.get('person', {}).get('fullName', '')
+    display_picture = user_info.get('person', {}).get('displayPicture', '')
+    
+    student = user_info.get('student', {})
+    department = student.get('branch name', '') or student.get('branch', {}).get('name', '')
+    batch = None
+    end_date_str = student.get('endDate')
+    start_date_str = student.get('startDate', '')
+    
+    date_to_parse = end_date_str or start_date_str
+    if date_to_parse:
+        try:
+            from datetime import datetime
+            parsed_date = datetime.strptime(date_to_parse, '%Y-%m-%d')
+            if not end_date_str and start_date_str:
+                batch = parsed_date.year + 4
+            else:
+                batch = parsed_date.year
+        except (ValueError, TypeError):
+            batch = None
+    
+    if not email:
         return Response(
-            {'error': 'Invalid user data from Omniport'},
+            {'error': 'Invalid user data from Omniport - email not found'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    user, created = User.objects.get_or_create(
-        username=username,
-        defaults={
-            'email': email,
-            'is_active': True,  
-        }
-    )
+    user = User.objects.filter(email=email).first()
     
-    if not created and user.email != email:
-        user.email = email
-        user.save()
+    if not user:
+        username = full_name if full_name else email.split('@')[0]
+        
+        base_username = username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}_{counter}"
+            counter += 1
+        
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            first_name=full_name.split()[0] if full_name else '',
+            last_name=' '.join(full_name.split()[1:]) if full_name and len(full_name.split()) > 1 else '',
+            is_active=True,
+        )
+        created = True
+    else:
+        created = False
     
     user.profile.email_verified = True
+    user.profile.batch = batch
+    user.profile.department = department
+    
+    if display_picture:
+        user.profile.display_picture = display_picture
+    
     user.profile.save()
     
     from rest_framework_simplejwt.tokens import RefreshToken
@@ -125,6 +160,10 @@ def omniport_login(request):
         'user': {
             'username': user.username,
             'email': user.email,
+            'full_name': full_name,
+            'batch': batch,
+            'department': department,
+            'display_picture': display_picture,
             'is_new': created
         }
     }, status=status.HTTP_200_OK)
