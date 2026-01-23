@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.pagination import PageNumberPagination
 from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import ImageSerializer, ImageUploadSerializer
@@ -22,6 +23,7 @@ class ImageViewSet(viewsets.ModelViewSet):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
     parser_classes = [JSONParser, MultiPartParser, FormParser]
+    pagination_class = PageNumberPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ImageFilter
     search_fields = ['uploaded_by__username', 'event__name']

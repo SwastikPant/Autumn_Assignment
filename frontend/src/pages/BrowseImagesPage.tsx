@@ -11,6 +11,7 @@ import {
   CircularProgress,
   Alert,
   Chip,
+  Pagination,
 } from '@mui/material';
 import { CameraAlt, Visibility, ThumbUp } from '@mui/icons-material';
 import { imagesService } from '../services/images';
@@ -22,16 +23,35 @@ const BrowseImagesPage: React.FC = () => {
   const [images, setImages] = useState<Image[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filters, setFilters] = useState<SearchFilters>({});
 
   useEffect(() => {
-    loadImages({});
+    loadImages({}, 1);
   }, []);
 
-  const loadImages = async (filters: SearchFilters) => {
+  const loadImages = async (filterParams: SearchFilters, page: number = 1) => {
     try {
       setLoading(true);
-      const data = await imagesService.getAll(filters);
-      setImages(data);
+      const response = await imagesService.getAll({ ...filterParams, page });
+      
+      if (response && response.results && Array.isArray(response.results)) {
+        setImages(response.results);
+        setTotalCount(response.count || 0);
+        setTotalPages(Math.ceil((response.count || 0) / 20));
+        setCurrentPage(page);
+      } else if (Array.isArray(response)) {
+        setImages(response);
+        setTotalCount(response.length);
+        setTotalPages(1);
+        setCurrentPage(1);
+      } else {
+        setImages([]);
+        setTotalCount(0);
+        setTotalPages(0);
+      }
     } catch (err: any) {
       setError('Failed to load images');
     } finally {
@@ -39,8 +59,14 @@ const BrowseImagesPage: React.FC = () => {
     }
   };
 
-  const handleSearch = (filters: SearchFilters) => {
-    loadImages(filters);
+  const handleSearch = (newFilters: SearchFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+    loadImages(newFilters, 1);
+  };
+
+  const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
+    loadImages(filters, page);
   };
 
   return (
@@ -66,7 +92,7 @@ const BrowseImagesPage: React.FC = () => {
       ) : (
         <>
           <Typography variant="body1" color="text.secondary" gutterBottom>
-            {images.length} {images.length === 1 ? 'photo' : 'photos'} found
+            {totalCount} {totalCount === 1 ? 'photo' : 'photos'} found
           </Typography>
 
           <Grid container spacing={2} sx={{ mt: 2 }}>
@@ -120,6 +146,17 @@ const BrowseImagesPage: React.FC = () => {
               </Grid>
             ))}
           </Grid>
+
+          {totalPages > 1 && (
+            <Box display="flex" justifyContent="center" mt={4} mb={2}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+              />
+            </Box>
+          )}
         </>
       )}
     </Container>

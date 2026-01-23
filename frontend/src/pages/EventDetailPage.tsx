@@ -12,6 +12,7 @@ import {
   CardMedia,
   Chip,
   ButtonGroup,
+  Pagination,
 } from '@mui/material';
 import { ArrowBack, CalendarToday, CameraAlt, CloudUpload } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
@@ -29,6 +30,10 @@ const EventDetailPage: React.FC = () => {
 
   const [displayedImages, setDisplayedImages] = useState<Image[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filters, setFilters] = useState<SearchFilters>({});
   
   const [viewMode, setViewMode] = useState<'grid' | 'cards'>(() => {
     try {
@@ -70,11 +75,12 @@ const EventDetailPage: React.FC = () => {
   }, [id, dispatch]);
 
 
+
   useEffect(() => {
-    if (currentEvent?.images) {
-      setDisplayedImages(currentEvent.images);
+    if (currentEvent && id) {
+      loadEventImages(filters, 1);
     }
-  }, [currentEvent]);
+  }, [currentEvent, id]);
 
 
   useEffect(() => {
@@ -99,22 +105,45 @@ const EventDetailPage: React.FC = () => {
     } catch (e) {}
   }, [viewMode, cardIndex, id]);
 
-  const handleSearch = async (filters: SearchFilters) => {
+  const loadEventImages = async (filterParams: SearchFilters, page: number = 1) => {
     if (!id) return;
     
     setLoadingImages(true);
     try {
       const params = {
-        ...filters,
+        ...filterParams,
         event: id,
+        page,
       };
-      const data = await imagesService.getAll(params);
-      setDisplayedImages(data);
+      const response = await imagesService.getAll(params);
+      
+
+      if (response && response.results && Array.isArray(response.results)) {
+        setDisplayedImages(response.results);
+        setTotalCount(response.count || 0);
+        setTotalPages(Math.ceil((response.count || 0) / 20));
+        setCurrentPage(page);
+      } else if (Array.isArray(response)) {
+        setDisplayedImages(response);
+        setTotalCount(response.length);
+        setTotalPages(1);
+        setCurrentPage(1);
+      }
     } catch (err) {
       console.error('Failed to filter images:', err);
     } finally {
       setLoadingImages(false);
     }
+  };
+
+  const handleSearch = async (newFilters: SearchFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+    loadEventImages(newFilters, 1);
+  };
+
+  const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
+    loadEventImages(filters, page);
   };
 
   const prevCard = () => {
@@ -300,6 +329,17 @@ const EventDetailPage: React.FC = () => {
                 <Button variant="outlined" onClick={prevCard}>Prev</Button>
                 <Button variant="outlined" onClick={nextCard}>Next</Button>
               </div>
+            </Box>
+          )}
+
+          {totalPages > 1 && (
+            <Box display="flex" justifyContent="center" mt={4} mb={2}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+              />
             </Box>
           )}
         </>

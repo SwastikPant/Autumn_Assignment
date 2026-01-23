@@ -4,7 +4,7 @@ import { Image } from '../types';
 export const imagesService = {
   getAll: async (params?: any): Promise<any> => {
     const response = await api.get('/images/', { params });
-    return Array.isArray(response.data) ? response.data : response.data.results;
+    return response.data;
   },
 
   getById: async (id: number, countView: boolean = false) => {
