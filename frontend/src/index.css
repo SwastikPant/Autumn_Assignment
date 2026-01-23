@@ -1,6 +1,7 @@
 :root {
  
-  --bg: #0b0f14;
+  --bg: linear-gradient(-45deg, #1b232f, #192a3c, #0d1825, #0b0f14);
+  --bg-size: 400% 400%;
   --bg-elev-1: #0f1720; 
   --bg-elev-2: #111826; 
   --card-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
